@@ -8,7 +8,7 @@ const connection = mysql.createConnection(
         host: 'localhost',
         port: 3306,
         user: 'root',
-        password: 'password',
+        password: 'yourRootPassword',
         database: 'employee_DB',
     }
 );
@@ -72,6 +72,30 @@ const initQuestion = [
             name: "Remove Department",
             value: "REMOVE_DEPARTMENT"
             },
+            // { // Extra Credit
+            //   name: "View All Employees By Department",
+            //   value: "VIEW_EMPLOYEES_BY_DEPARTMENT"
+            // },
+            // { // Extra Credit
+            //   name: "View All Employees By Manager",
+            //   value: "VIEW_EMPLOYEES_BY_MANAGER"
+            // },
+            // { // Extra Credit
+            //   name: "Remove Employee",
+            //   value: "REMOVE_EMPLOYEE"
+            // },
+            // { // Extra Credit
+            //   name: "Update Employee Manager",
+            //   value: "UPDATE_EMPLOYEE_MANAGER"
+            // },
+            // { //Extra Credit
+            //   name: "Remove Role",
+            //   value: "REMOVE_ROLE"
+            // },
+            // { //Extra Credit
+            //   name: "Remove Department",
+            //   value: "REMOVE_DEPARTMENT"
+            // },
             {
             name: "Quit",
             value: "QUIT"
