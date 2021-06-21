@@ -2,6 +2,17 @@
 const inquirer = require('inquirer')
 const mysql = require('mysql')
 
+// Connect to MySQL Database
+const connection = mysql.createConnection(
+    {
+        host: 'localhost',
+        port: 3306,
+        user: 'root',
+        password: 'password',
+        database: 'employee_DB',
+    }
+);
+
 // Initial prompt
 const initQuestion = [
     {
