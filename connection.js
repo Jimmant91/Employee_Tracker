@@ -1,6 +1,7 @@
 // Requiring packages
-const inquirer = require('inquirer')
-const mysql = require('mysql')
+const inquirer = require('inquirer');
+const cTable = require('console.table');
+const mysql = require('mysql');
 
 // Connect to MySQL Database
 const connection = mysql.createConnection(
@@ -13,9 +14,16 @@ const connection = mysql.createConnection(
     }
 );
 
+connection.connect((err) => {
+    if (err) throw err;
+    initQuestion();
+});
+
+///////////////////////////////////////////////////////
+
 // Initial prompt
-const initQuestion = [
-    {
+const initQuestion = () => {
+    inquirer.prompt([{
         type: 'list',
         message: 'What would you like to do?',
         name: 'initQuestion',
@@ -101,5 +109,5 @@ const initQuestion = [
             value: "QUIT"
             }
         ]
-    }
-]
+    }]);
+}
