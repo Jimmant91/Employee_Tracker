@@ -28,43 +28,40 @@ const initQuestion = () => {
         message: 'What would you like to do?',
         name: 'initQuestion',
         choices: [
+            // Wanting to arrange these in the most sensical order
             {
-            name: "View All Employees",
-            value: "VIEW_EMPLOYEES"
+                name: "View All Employees",
+                value: "VIEW_EMPLOYEES"
             },
             {
-            name: "View All Employees By Department",
-            value: "VIEW_EMPLOYEES_BY_DEPARTMENT"
+                name: "Add Employee",
+                value: "ADD_EMPLOYEE"
             },
             {
-            name: "Add Employee",
-            value: "ADD_EMPLOYEE"
+                name: "View All Departments",
+                value: "VIEW_DEPARTMENTS"
             },
             {
-            name: "Update Employee Role",
-            value: "UPDATE_EMPLOYEE_ROLE"
+                name: "View All Employees By Department",
+                value: "VIEW_EMPLOYEES_BY_DEPARTMENT"
             },
             {
-            name: "View All Roles",
-            value: "VIEW_ROLES"
+                name: "Add Department",
+                value: "ADD_DEPARTMENT"
             },
             {
-            name: "Add Role",
-            value: "ADD_ROLE"
+                name: "View All Roles",
+                value: "VIEW_ROLES"
             },
             {
-            name: "View All Departments",
-            value: "VIEW_DEPARTMENTS"
+                name: "Add Role",
+                value: "ADD_ROLE"
             },
             {
-            name: "Add Department",
-            value: "ADD_DEPARTMENT"
+                name: "Update Employee Role",
+                value: "UPDATE_EMPLOYEE_ROLE"
             },
-            {
-            name: "Quit",
-            value: "QUIT"
-            },
-
+            
             // { // Extra Credit
             //   name: "View All Employees By Manager",
             //   value: "VIEW_EMPLOYEES_BY_MANAGER"
@@ -99,17 +96,58 @@ const initQuestion = () => {
             case 'VIEW_EMPLOYEES':
                 allEmps();
                 break;
+
+            case 'VIEW_DEPARTMENTS':
+                allDept();
+                break;
+
+            case 'VIEW_EMPLOYEES_BY_DEPARTMENT':
+                allEmpDept();
+                break;
+
+            case 'QUIT':
+                connection.end();
+                break;
+
+            default:
+                console.log(`Invalid action: ${answer.action}`);
+                break;
         }
     })
 }
 
+// Calling all functions for my switch
 const allEmps = () => {
-    const query = 'SELECT employee.id, employee.first_name, employee.last_name, role.id, role.title, role.salary FROM employee INNER JOIN role ON (role.id = employee.role_id) INNER JOIN department ON (department.id = role.department_id) ORDER BY employee.id;';
+    // Want to shorten this query as much as possible
+    const query = "SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS Employee, role.title AS Title, dept_name AS Department, role.salary AS Salary, CONCAT(m.first_name,' ', m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id JOIN role ON e.role_id = role.id JOIN department ON department.id = role.department_id ORDER BY e.id";
     
     connection.query(query, (err, res) => {
       if (err) throw err;
       console.log("VIEW_EMPLOYEES");
       console.table(res);  
       initQuestion();
+    })
+};
+
+const allDept = () => {
+    const query = "SELECT department.dept_name AS Department FROM department ORDER by department.id";
+
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log("VIEW_DEPARTMENTS");
+        console.table(res);
+        initQuestion();
+    })
+};
+
+const allEmployDep = () => {
+    // Want to shorten this query as much as possible
+    const query = "SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS Employee, role.title AS Title, dept_name AS Department, role.salary AS Salary, CONCAT(m.first_name,' ', m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id JOIN role ON e.role_id = role.id JOIN department ON department.id = role.department_id ORDER BY dept_name ASC";
+    
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log("VIEW_EMPLOYEES_BY_DEPARTMENT");
+        console.table(res);  
+        start();
     })
 };
