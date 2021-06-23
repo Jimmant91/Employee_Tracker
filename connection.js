@@ -3,6 +3,7 @@ const inquirer = require('inquirer');
 const cTable = require('console.table');
 const mysql = require('mysql');
 const util = require('util');
+const { allowedNodeEnvironmentFlags } = require('process');
 
 // Connect to MySQL Database
 const connection = mysql.createConnection(
@@ -53,6 +54,10 @@ const initQuestion = () => {
                 value: "ADD_DEPARTMENT"
             },
             {
+                name: "Remove Department",
+                value: "REMOVE_DEPARTMENT"
+            },
+            {
                 name: "View All Roles",
                 value: "VIEW_ROLES"
             },
@@ -81,11 +86,6 @@ const initQuestion = () => {
             //   name: "Remove Role",
             //   value: "REMOVE_ROLE"
             // },
-            // { //Extra Credit
-            //   name: "Remove Department",
-            //   value: "REMOVE_DEPARTMENT"
-            // },
-
             {
             name: "Quit",
             value: "QUIT"
@@ -110,6 +110,26 @@ const initQuestion = () => {
 
             case 'VIEW_EMPLOYEES_BY_DEPARTMENT':
                 allEmpDept();
+                break;
+
+            case 'ADD_DEPARTMENT':
+                addDept();
+                break;
+
+            case 'REMOVE_DEPARTMENT':
+                removeDept();
+                break;
+
+            case 'VIEW_ROLES':
+                allRoles();
+                break;
+
+            case 'ADD_ROLE':
+                addRole();
+                break;
+
+            case 'UPDATE_EMPLOYEE_ROLE':
+                updateRole();
                 break;
 
             case 'QUIT':
@@ -158,7 +178,7 @@ const addEmp = async () => {
         {
             name: "manager_id",
             type: "input",
-            message: "What is the employee's manager ID? (Leave blank in not applicable)",
+            message: "What is the employee's manager's ID?",
         },
         {
             name: "role_id",
@@ -201,4 +221,125 @@ const allEmpDept = () => {
         console.table(res);  
         initQuestion();
     })
+};
+
+const addDept = async () => {
+    const answer = await inquirer.prompt([
+        {
+            name: "dept_name",
+            type: "input",
+            message: "Provide the name of the department you would like to add:",
+        }
+    ]);
+
+    const insert = "INSERT INTO department (dept_name) VALUES (?);";
+    const deptInfo = [answer.dept_name];
+    const res = await query(insert, deptInfo);
+    console.table(res);
+    initQuestion();
+}
+
+// Global delete function
+const deleteFromTable = async (table, idColumn, idToDelete) => {
+    const params = [table, idColumn, idToDelete];
+    const res = await query(`DELETE FROM ?? WHERE ?? = ?`, params);
+    // console.log(params);
+    console.table(res);
+    initQuestion();
+  };
+
+const removeDept = async () => {
+    const departments = await query(`SELECT * FROM department`);
+    const departmentChoice = departments.map((choice) => ({
+      name: choice.dept_name,
+      value: choice.id,
+    }));
+  
+    const answer = await inquirer.prompt([
+        {
+            name: "department_id",
+            type: "list",
+            message: "Which department would you like to delete?",
+            choices: departmentChoice,
+        },
+    ]);
+  
+    deleteFromTable("department", "id", answer.department_id);
+};
+
+const allRoles = () => {
+    const query = "SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS Employee, role.title AS Title, dept_name AS Department, role.salary AS Salary, CONCAT(m.first_name,' ', m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id JOIN role ON e.role_id = role.id JOIN department ON department.id = role.department_id ORDER BY role.title ASC";
+    
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log("VIEW_ROLES");
+        console.table(res);  
+        initQuestion();
+    });
+};
+
+const addRole = async () => {
+    const depts = await query('SELECT * FROM department;');
+    const deptChoice = depts.map((choice) => ({
+        name: choice.dept_name,
+        value: choice.id,
+    }));
+
+    const answer = await inquirer.prompt([
+        {
+            name: "title",
+            type: "input",
+            message: "What is role you would like to add?",
+        },
+        {
+            name: "salary",
+            type: "input",
+            message: "What is the salary?",
+        },
+        {
+            name: "dept_name",
+            type: "list",
+            message: "What is the corresponding department?",
+            choices: deptChoice
+        }
+    ]);
+
+    const roleInfo = "INSERT INTO role (title, salary, department_id) VALUES (?,?,?)";
+    let answers = [
+        answer.title,
+        answer.salary,
+        answer.dept_name,
+    ]
+    const res = await query(roleInfo, answers);
+    console.table(res);
+    initQuestion();
+}
+
+const updateRole = async () => {
+    const roles = await query("SELECT * FROM role;");
+    const roleChoice = roles.map((choice) => ({
+        name: choice.title,
+        value: choice.id,
+    }));
+
+    const answer = await inquirer.prompt([
+        {
+            name: "role_id",
+            type: "list",
+            message: "Which role would you like to update?",
+            choices: roleChoice,
+        },
+        {
+            name: "title",
+            type: "input",
+            message: "What would you like to rename the role to?"
+        },
+    ]);
+
+    const roleInfo = "UPDATE role SET title=? WHERE id=?;";
+    const answers = [answer.title, answer.role_id];
+
+    const res = await query(roleInfo, answers);
+    console.table(res);
+    initQuestion();
 };
