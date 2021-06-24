@@ -1,7 +1,29 @@
+// Requiring packages
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const mysql = require('mysql');
-const connection = require('./config/connection');
+const util = require('util');
+const { allowedNodeEnvironmentFlags } = require('process');
+
+// Connect to MySQL Database
+const connection = mysql.createConnection(
+    {
+        host: 'localhost',
+        port: 3306,
+        user: 'root',
+        password: 'yourRootPassword',
+        database: 'employee_DB',
+    }
+);
+
+connection.connect((err) => {
+    if (err) throw err;
+    initQuestion();
+});
+
+const query = util.promisify(connection.query).bind(connection);
+
+//////////////////////////////////////////////////////////////////////////////
 
 // Initial prompt
 const initQuestion = () => {
@@ -65,7 +87,7 @@ const initQuestion = () => {
             },
             {
                 name: "See The Utilized Budget",
-                value: "UTILIZED_BUDGET"
+                value: "UTILIZED BUDGET"
             },
             {
             name: "Quit",
@@ -168,51 +190,48 @@ const allEmps = () => {
 };
 
 // Add employee
-const addEmp = () => {
-    const query = "SELECT * FROM role"
-    connection.query(query, (err, res) => {
-        if (err) throw err;
-        const roleChoice = res.map((choice) => ({
-            name: choice.title,
-            value: choice.id,
-        }));
+const addEmp = async () => {
+    // Awaiting the role to be selected at end of the following prompts
+    const roles = await query(`SELECT * FROM role`);
+    const roleChoice = roles.map((choice) => ({
+        name: choice.title,
+        value: choice.id,
+    }));
 
-        inquirer.prompt([
-            {
-                name: "first_name",
-                type: "input",
-                message: "What is the employee's first name?",
-            },
-            {
-                name: "last_name",
-                type: "input",
-                message: "What is the employee's last name?",
-            },
-            {
-                name: "manager_id",
-                type: "input",
-                message: "What is the employee's manager's ID?",
-            },
-            {
-                name: "role_id",
-                type: "list",
-                message: "What is the employee's role?",
-                choices: roleChoice,
-            }
-        ]).then(answer => {
-            const empInfo = "INSERT INTO employee (first_name, last_name, manager_id, role_id) VALUES (?,?,?,?)";
-            let data = [
-                answer.first_name,
-                answer.last_name,
-                answer.manager_id,
-                answer.role_id,
-            ]
+    const answer = await inquirer.prompt([
+        {
+            name: "first_name",
+            type: "input",
+            message: "What is the employee's first name?",
+        },
+        {
+            name: "last_name",
+            type: "input",
+            message: "What is the employee's last name?",
+        },
+        {
+            name: "manager_id",
+            type: "input",
+            message: "What is the employee's manager's ID?",
+        },
+        {
+            name: "role_id",
+            type: "list",
+            message: "What is the employee's role?",
+            choices: roleChoice,
+        }
+    ]);
 
-        connection.query(empInfo, data);
-        console.log("Employee Added");
-        initQuestion();
-        })
-    }); 
+    const empInfo = "INSERT INTO employee (first_name, last_name, manager_id, role_id) VALUES (?,?,?,?)";
+    let answers = [
+        answer.first_name,
+        answer.last_name,
+        answer.manager_id,
+        answer.role_id,
+    ]
+    const res = await query(empInfo, answers);
+    console.table(res);
+    initQuestion();
 };
 
 // Remove Employee
@@ -261,20 +280,20 @@ const allEmpDept = () => {
 };
 
 // Add a department
-const addDept = () => {
-    inquirer.prompt([
+const addDept = async () => {
+    const answer = await inquirer.prompt([
         {
             name: "dept_name",
             type: "input",
             message: "Provide the name of the department you would like to add:",
         }
-    ]).then(answer => {
-        const insert = "INSERT INTO department (dept_name) VALUES (?);";
-        const deptInfo = [answer.dept_name];
-        connection.query(insert, deptInfo);
-        console.log("Department created");
-        initQuestion();
-    })
+    ]);
+
+    const insert = "INSERT INTO department (dept_name) VALUES (?);";
+    const deptInfo = [answer.dept_name];
+    const res = await query(insert, deptInfo);
+    console.table(res);
+    initQuestion();
 }
 
 // Remove a department
@@ -297,9 +316,9 @@ const removeDept = async () => {
     deleteFromTable("department", "id", answer.department_id);
 };
 
-// Display all employees organized by role
+// Display all roles
 const allRoles = () => {
-    const query = "SELECT * FROM role;";
+    const query = "SELECT * FROM role";
     
     connection.query(query, (err, res) => {
         if (err) throw err;
@@ -310,44 +329,41 @@ const allRoles = () => {
 };
 
 //Add a role
-const addRole =  () => {
-    const query = "SELECT * FROM department;"
-    connection.query(query, (err, res) => {
-        if (err) throw err;
-        const deptChoice = res.map((choice) => ({
-            name: choice.dept_name,
-            value: choice.id,
-        }));
+const addRole = async () => {
+    const depts = await query('SELECT * FROM department;');
+    const deptChoice = depts.map((choice) => ({
+        name: choice.dept_name,
+        value: choice.id,
+    }));
 
-        inquirer.prompt([
-            {
-                name: "title",
-                type: "input",
-                message: "What is role you would like to add?",
-            },
-            {
-                name: "salary",
-                type: "input",
-                message: "What is the salary?",
-            },
-            {
-                name: "dept_name",
-                type: "list",
-                message: "What is the corresponding department?",
-                choices: deptChoice
-            }
-        ]).then(answer => {
-            const roleInfo = "INSERT INTO role (title, salary, department_id) VALUES (?,?,?)";
-            let answers = [
-                answer.title,
-                answer.salary,
-                answer.dept_name,
-            ]
-            connection.query(roleInfo, answers);
-            console.log("The role has been created");
-            initQuestion();
-        })
-    });
+    const answer = await inquirer.prompt([
+        {
+            name: "title",
+            type: "input",
+            message: "What is role you would like to add?",
+        },
+        {
+            name: "salary",
+            type: "input",
+            message: "What is the salary?",
+        },
+        {
+            name: "dept_name",
+            type: "list",
+            message: "What is the corresponding department?",
+            choices: deptChoice
+        }
+    ]);
+
+    const roleInfo = "INSERT INTO role (title, salary, department_id) VALUES (?,?,?)";
+    let answers = [
+        answer.title,
+        answer.salary,
+        answer.dept_name,
+    ]
+    const res = await query(roleInfo, answers);
+    console.table(res);
+    initQuestion();
 }
 
 // Remove a role
@@ -371,45 +387,40 @@ const removeRole = async () => {
 };
 
 // Update an existing role
-const updateRole = () => {
-    const empQuery = ("SELECT * FROM employee;");
-    connection.query(empQuery, (err, res) => {
-        if (err) throw err;
-        const empChoice = res.map((choice) => ({
-            name: `${choice.first_name} ${choice.last_name}`,
-            value: choice.id,
-        }));
+const updateRole = async () => {
+    const employees = await query("SELECT * FROM employee;");
+    const empChoice = employees.map((choice) => ({
+        name: `${choice.first_name} ${choice.last_name}`,
+        value: choice.id,
+    }));
 
-        const titleQuery = ("SELECT * FROM role;");
-        connection.query(titleQuery, (err, res) => {
-            if (err) throw err;
-            const titleChoice = res.map((choice) => ({
-                name: choice.title,
-                value: choice.id,
-            }));
+    const roles = await query ("SELECT * FROM role;");
+    const roleChoice = roles.map((choice) => ({
+        name: choice.title,
+        value: choice.id,
+    }))
 
-            inquirer.prompt([
-                {
-                    name: "employee_name",
-                    type: "list",
-                    message: "Select an employee to update their title:",
-                    choices: empChoice,
-                },
-                {
-                    name: "title",
-                    type: "list",
-                    message: "What would you like to update their role to?",
-                    choices: titleChoice,
-                },
-            ]).then(answer => {
-                const roleInfo = "UPDATE role SET title=? WHERE id=?;";
-                const answers = [answer.employee_name, answer.title];
-                connection.query(roleInfo, answers);
-                console.log("Employee title updated");
-                initQuestion();
-            })
-        })
-    })
+    const answer = await inquirer.prompt([
+        {
+            name: "employee_id",
+            type: "list",
+            message: "Which employee would you like to update?",
+            choices: empChoice,
+        },
+        {
+            name: "title",
+            type: "list",
+            message: "What would you like their new title to be?",
+            choices: roleChoice,
+        },
+    ]);
+
+    const roleInfo = "UPDATE employee SET role_id=? WHERE id=?;";
+    const answers = [answer.employee_id, answer.title];
+
+    const res = await query(roleInfo, answers);
+    console.table(res);
+    initQuestion();
 };
 
 // Display all employees organized by their Manager
@@ -456,13 +467,3 @@ const updateEmpMan = async () => {
     console.table(res);
     initQuestion();
 };
-
-const budget = async () => { 
-    let res = await connection.query("SELECT SUM(salary) AS Salary FROM role");
-    const budgetTotal = []; 
-    res.forEach(bud => budgetTotal.push({ salary: bud.salary }))
-    console.log("The total utilized budget is - $", budgetTotal[0].salary);
-    initQuestion(); 
-};
-
-initQuestion();

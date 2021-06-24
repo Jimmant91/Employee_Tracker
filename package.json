@@ -1,7 +1,7 @@
 {
   "name": "employee_tracker",
   "version": "1.0.0",
-  "description": "Developers are often tasked with creating interfaces that make it easy for non-developers to view and interact with information stored in databases. Often these interfaces are known as **C**ontent **M**anagement **S**ystems. In this homework assignment, your challenge is to architect and build a solution for managing a company's employees using node, inquirer, and MySQL.",
+  "description": "[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)   ## Description   Developed a Content Management Systems as a solution for managing a company's employees using node, inquirer, and MySQL.  ## Table of Contents   * [Installation](##-installation)   * [Usage](##-usage)   * [Demo](##-demo)   * [License](##-license)   * [Questions](##-questions)   ## Installation   To install the necessary dependencies, run the following command:   ```   npm init   npm i inquirer   npm i mysql   ```   ## Usage   Run 'node index.js' in the terminal and then you will be able to do the following:",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
