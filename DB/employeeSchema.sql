@@ -29,7 +29,3 @@ CREATE TABLE employee(
     -- manager_id references the id in the employee table -- 
     FOREIGN KEY (manager_id) REFERENCES employee(id)
 );
-
-SELECT * FROM department;
-SELECT * FROM job;
-SELECT * FROM employee;
