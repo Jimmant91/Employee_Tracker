@@ -1,4 +1,4 @@
-# Team Profile Generator
+# Employee Tracker
   [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
   ## Description
   Developed a Content Management Systems as a solution for managing a company's employees using node, inquirer, and MySQL.  ## Table of Contents
