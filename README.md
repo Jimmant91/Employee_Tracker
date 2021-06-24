@@ -31,6 +31,10 @@
 
   ## Demo
   
+  <a href="https://www.youtube.com/watch?v=i6u7lRmqKHo">Walkthrough Video</a>
+
+  ![Database Screenshot](./assets/img/employeeDB.png)
+
 
   ## License
   This projects is licensed under the ISC license.
